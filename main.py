@@ -11,13 +11,24 @@ from models import IncomingMessage, AgentResponse
 
 load_dotenv()
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="Agentic Honey-Pot API")
+
+# Configure CORS to allow all origins and headers (including x-api-key)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Simple in-memory storage for demonstration/MVP
 # In production, use a database (Redis/Postgres)
 sessions = {}
 
-API_KEY = "secret"  # TODO: Move to env var
+API_KEY = os.getenv("API_KEY", "secret")  # Defaults to "secret" if not set in env
 
 async def verify_api_key(x_api_key: str = Header(...)):
     if x_api_key != API_KEY:
