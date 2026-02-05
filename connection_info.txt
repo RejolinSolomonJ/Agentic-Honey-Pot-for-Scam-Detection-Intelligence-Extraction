@@ -1,2 +1,4 @@
 Starting...
 [32mForwarding HTTP traffic from https://265cb1dffd7c283e-14-139-187-225.serveousercontent.com
+[0mConnection to serveo.net closed by remote host.
+Connection to serveo.net closed.
