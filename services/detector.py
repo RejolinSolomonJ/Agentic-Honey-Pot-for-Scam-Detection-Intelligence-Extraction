@@ -1,11 +1,5 @@
 import os
-import google.generativeai as genai
-from dotenv import load_dotenv
-
-load_dotenv()
-GRAPH_API_KEY = os.getenv("GEMINI_API_KEY")
-if GRAPH_API_KEY:
-    genai.configure(api_key=GRAPH_API_KEY)
+from .llm_wrapper import generate_content
 
 def detect_scam(text: str) -> bool:
     """
@@ -18,15 +12,15 @@ def detect_scam(text: str) -> bool:
         return True
 
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
         prompt = (
             "You are a Scam Detection AI. Analyze the user message. "
             "If it looks like a scam, phishing, or fraud attempt, reply exactly 'TRUE'. "
             "Otherwise, reply 'FALSE'.\n\n"
             f"Message: {text}"
         )
-        response = model.generate_content(prompt)
-        content = response.text.strip().upper()
+        
+        # Use wrapper for generation
+        content = generate_content(prompt).strip().upper()
         return "TRUE" in content
     except Exception as e:
         print(f"Error in detect_scam: {e}")
