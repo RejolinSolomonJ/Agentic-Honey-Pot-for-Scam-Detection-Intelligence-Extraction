@@ -1,13 +1,7 @@
 import os
-import google.generativeai as genai
 from typing import List
 from models import Message
-from dotenv import load_dotenv
-
-load_dotenv()
-GRAPH_API_KEY = os.getenv("GEMINI_API_KEY")
-if GRAPH_API_KEY:
-    genai.configure(api_key=GRAPH_API_KEY)
+from .llm_wrapper import generate_chat_response
 
 SYSTEM_PROMPT = """
 You are a naive, slightly confused application agent acting as a potential victim. 
@@ -22,21 +16,17 @@ Keep responses short and human-like.
 
 def generate_agent_reply(history: List[Message], current_message: str) -> str:
     """
-    Generates a reply to the scammer using Gemini.
+    Generates a reply to the scammer using the LLM wrapper (Gemini -> OpenAI fallback).
     """
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        # Convert history to format expected by wrapper if needed, 
+        # but wrapper handles Message objects if we adjust it or we just pass Message objects 
+        # and wrapper logic handles it? 
+        # My wrapper expects object with .sender and .text attributes primarily for the loop.
+        # So passing 'history' (List[Message]) directly is fine as the wrapper iterates and checks .sender.
         
-        # Prepend system prompt to history for gemini-pro compliance
-        chat_history = [{"role": "user", "parts": [SYSTEM_PROMPT]}, {"role": "model", "parts": ["Understood. I will act as the naive user."]}]
-        
-        for msg in history:
-            role = "user" if msg.sender == "scammer" else "model"
-            chat_history.append({"role": role, "parts": [msg.text]})
-            
-        chat = model.start_chat(history=chat_history)
-        response = chat.send_message(current_message)
-        return response.text.strip()
+        reply = generate_chat_response(history, current_message, system_prompt=SYSTEM_PROMPT)
+        return reply
     except Exception as e:
         print(f"Error in generate_agent_reply: {e}")
-        return f"I am confused, can you explain again? (Error: {str(e)})"
+        return f"I am confused, can you explain again?"

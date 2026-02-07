@@ -1,14 +1,8 @@
 import os
 import json
-import google.generativeai as genai
 from typing import List
 from models import Message, ExtractedIntelligence
-from dotenv import load_dotenv
-
-load_dotenv()
-GRAPH_API_KEY = os.getenv("GEMINI_API_KEY")
-if GRAPH_API_KEY:
-    genai.configure(api_key=GRAPH_API_KEY)
+from .llm_wrapper import generate_content
 
 def extract_intelligence_data(history: List[Message], current_message: str) -> ExtractedIntelligence:
     """
@@ -32,13 +26,14 @@ def extract_intelligence_data(history: List[Message], current_message: str) -> E
     """
 
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        # Use wrapper
+        text = generate_content(prompt + "\n\nConversation:\n" + full_text)
         
-        response = model.generate_content(prompt + "\n\nConversation:\n" + full_text)
-        text = response.text
         # Clean up markdown code blocks if present
         if text.startswith("```json"):
             text = text[7:]
+        if text.startswith("```"): # handle case where it's just backticks
+            text = text[3:]
         if text.endswith("```"):
             text = text[:-3]
             
